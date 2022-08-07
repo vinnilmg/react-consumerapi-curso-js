@@ -7,11 +7,13 @@ import axios from '../../services/axios';
 import history from '../../services/history';
 import { Container } from '../../styles/GlobalStyles';
 import { Form } from './styles';
+import Loading from '../../components/Loading';
 
 export default function Register() {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -36,6 +38,8 @@ export default function Register() {
 
     if (formErrors) return;
 
+    setIsLoading(true);
+
     try {
       const response = await axios.post('/usuarios', {
         nome,
@@ -43,9 +47,12 @@ export default function Register() {
         email,
       });
 
+      // eslint-disable-next-line
       console.log(response.statusText);
 
       toast.success('Usuário cadastrado com sucesso!');
+      setIsLoading(false);
+
       history.push('/login');
     } catch (err) {
       // const status = get(err, 'response.status', 0);
@@ -56,11 +63,14 @@ export default function Register() {
       } else {
         toast.error('Falha ao cadastrar usuário!');
       }
+
+      setIsLoading(false);
     }
   }
 
   return (
     <Container>
+      <Loading isLoading={isLoading} />
       <h1>Crie sua conta grátis!</h1>
 
       <Form onSubmit={handleSubmit}>
