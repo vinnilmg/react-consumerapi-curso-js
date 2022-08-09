@@ -1,19 +1,33 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { isEmail } from 'validator';
-import { get } from 'lodash';
+import { useSelector, useDispatch } from 'react-redux';
 
-import axios from '../../services/axios';
-import history from '../../services/history';
 import { Container } from '../../styles/GlobalStyles';
 import { Form } from './styles';
 import Loading from '../../components/Loading';
+import * as actions from '../../store/modules/auth/actions';
 
 export default function Register() {
+  const dispatch = useDispatch();
+
+  const isLoading = useSelector((state) => state.authReducer.isLoading);
+  const {
+    id: idStored,
+    nome: nomeStored,
+    email: emailStored,
+  } = useSelector((state) => state.authReducer.user);
+
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+
+  React.useEffect(() => {
+    if (!idStored) return;
+
+    setNome(nomeStored);
+    setEmail(emailStored);
+  }, [idStored, nomeStored, emailStored]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -31,47 +45,21 @@ export default function Register() {
       toast.error('E-mail inválido.');
     }
 
-    if (password.length < 6 || password.length > 50) {
+    if (!idStored && (password.length < 6 || password.length > 50)) {
       formErrors = true;
       toast.error('Sua senha deve ter entre 6 e 50 caracteres.');
     }
 
     if (formErrors) return;
 
-    setIsLoading(true);
-
-    try {
-      const response = await axios.post('/usuarios', {
-        nome,
-        password,
-        email,
-      });
-
-      // eslint-disable-next-line
-      console.log(response.statusText);
-
-      toast.success('Usuário cadastrado com sucesso!');
-      setIsLoading(false);
-
-      history.push('/login');
-    } catch (err) {
-      // const status = get(err, 'response.status', 0);
-      const erros = get(err, 'response.data.erros', []);
-
-      if (erros.length > 0) {
-        erros.map((erro) => toast.error(erro));
-      } else {
-        toast.error('Falha ao cadastrar usuário!');
-      }
-
-      setIsLoading(false);
-    }
+    // lança action
+    dispatch(actions.registerRequest({ nome, email, password, idStored }));
   }
 
   return (
     <Container>
       <Loading isLoading={isLoading} />
-      <h1>Crie sua conta grátis!</h1>
+      <h1>{!idStored ? 'Crie sua conta grátis!' : 'Atualize seus dados!'}</h1>
 
       <Form onSubmit={handleSubmit}>
         <label htmlFor="nome">
@@ -104,7 +92,7 @@ export default function Register() {
           />
         </label>
 
-        <button type="submit">Cadastrar</button>
+        <button type="submit">{!idStored ? 'Criar' : 'Atualizar'}</button>
       </Form>
     </Container>
   );

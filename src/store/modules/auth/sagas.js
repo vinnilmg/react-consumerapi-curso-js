@@ -26,7 +26,7 @@ function* loginRequest({ payload }) {
 }
 
 // eslint-disable-next-line
-function* persistRehydrate({ payload }) {
+function persistRehydrate({ payload }) {
   const token = get(payload, 'authReducer.token', '');
 
   if (!token) return;
@@ -35,7 +35,54 @@ function* persistRehydrate({ payload }) {
   axios.defaults.headers.Authorization = `Bearer ${token}`;
 }
 
+// eslint-disable-next-line
+function* registerRequest({ payload }) {
+  const { idStored: id, nome, email, password } = payload;
+
+  try {
+    // se tiver ID é atualizacao do usuario, se não é criação de usuario
+    if (id) {
+      yield call(axios.put, '/usuarios', {
+        nome,
+        email,
+        password: password || undefined,
+      });
+
+      toast.success('Seus dados foram atualizados!');
+      yield put(actions.registerUpdatedSuccess({ nome, email, password }));
+    } else {
+      yield call(axios.post, '/usuarios', {
+        nome,
+        email,
+        password,
+      });
+
+      toast.success('Usuário criado com sucesso!');
+      yield put(actions.registerCreatedSuccess({ nome, email, password }));
+      history.push('/login');
+    }
+  } catch (e) {
+    const erros = get(e, 'response.data.erros', []);
+    const status = get(e, 'response.status', 0);
+
+    if (status === 401) {
+      toast.error('Faça login novamente!');
+      yield put(actions.loginFailure()); // desloga o usuario
+      return history.push('/login');
+    }
+
+    if (erros.length > 0) {
+      erros.map((erro) => toast.error(erro));
+    } else {
+      toast.error('Erro desconhecido. Fale com o ADM.');
+    }
+
+    yield put(actions.registerFailure());
+  }
+}
+
 export default all([
   takeLatest(types.LOGIN_REQUEST, loginRequest),
   takeLatest(types.PERSIST_REHYDRATE, persistRehydrate),
+  takeLatest(types.REGISTER_REQUEST, registerRequest),
 ]);
