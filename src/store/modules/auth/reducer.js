@@ -1,4 +1,5 @@
 import * as actions from '../types';
+import axios from '../../../services/axios';
 
 const initialState = {
   isLoggedIn: false,
@@ -19,6 +20,9 @@ export default function (state = initialState, action) {
     }
 
     case actions.LOGIN_FAILURE: {
+      // remove Authorization
+      delete axios.defaults.headers.Authorization;
+
       // vai deslogar o usuário (retorna o estado como inicial)
       const newState = { ...initialState };
       return newState;
