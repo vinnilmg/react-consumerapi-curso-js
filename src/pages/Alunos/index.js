@@ -71,7 +71,9 @@ export default function Alunos() {
 
       <h1>Alunos</h1>
 
-      <NovoAluno to="/aluno/">Novo aluno</NovoAluno>
+      <NovoAluno to="/aluno/">
+        <button type="submit">Novo aluno</button>
+      </NovoAluno>
 
       <AlunoContainer>
         {alunos.map((aluno, index) => (
