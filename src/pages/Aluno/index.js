@@ -4,9 +4,11 @@ import PropTypes from 'prop-types';
 import { isEmail, isInt, isFloat } from 'validator';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
+import { FaUserCircle, FaEdit } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 import { Container } from '../../styles/GlobalStyles';
-import { Form } from './styles';
+import { Form, ProfilePicture, Title } from './styles';
 import Loading from '../../components/Loading';
 import history from '../../services/history';
 import axios from '../../services/axios';
@@ -14,7 +16,7 @@ import * as actions from '../../store/modules/auth/actions';
 
 export default function Aluno({ match }) {
   const dispatch = useDispatch();
-  const id = get(match, 'params.id', 0);
+  const id = get(match, 'params.id', '');
 
   const [nome, setNome] = React.useState('');
   const [sobrenome, setSobrenome] = React.useState('');
@@ -22,6 +24,7 @@ export default function Aluno({ match }) {
   const [idade, setIdade] = React.useState('');
   const [peso, setPeso] = React.useState('');
   const [altura, setAltura] = React.useState('');
+  const [foto, setFoto] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
 
   React.useEffect(() => {
@@ -42,6 +45,7 @@ export default function Aluno({ match }) {
         setIdade(data.idade);
         setPeso(data.peso);
         setAltura(data.altura);
+        setFoto(Foto);
 
         setIsLoading(false);
       } catch (err) {
@@ -147,7 +151,20 @@ export default function Aluno({ match }) {
   return (
     <Container>
       <Loading isLoading={isLoading} />
-      <h1>{id ? `Editar aluno` : 'Crie um novo aluno'}</h1>
+      <Title>{id ? `Editar aluno` : 'Crie um novo aluno'}</Title>
+
+      {id && (
+        <ProfilePicture>
+          {foto ? (
+            <img crossOrigin="anonymous" src={foto} alt={nome} />
+          ) : (
+            <FaUserCircle size={180} />
+          )}
+          <Link to={`/fotos/${id}`}>
+            <FaEdit size={24} />
+          </Link>
+        </ProfilePicture>
+      )}
 
       <Form onSubmit={handleSubmit}>
         <input
